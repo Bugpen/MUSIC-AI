@@ -1,0 +1,356 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard · Music Platform</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js"
+      integrity="sha512-b0x9QtLmzCb92pOcqBFpDzp0psq5mB1YB5oPsgCz7kL+DKnDjcuW5tI7u6TB+Io2XhB8brcFK2nYgHtv8WbpUw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+  </head>
+  <body>
+    <div class="dashboard">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo">SS</div>
+          <div class="brand-text">
+            <p class="eyebrow">Admin Dashboard</p>
+            <h1>Song Studio</h1>
+            <p class="sub">Upload audio, sync lyrics, and manage your music catalog.</p>
+          </div>
+        </div>
+        <div class="search">
+          <input
+            type="text"
+            id="folderSearch"
+            placeholder="Search songs, albums, playlists..."
+            aria-label="Search songs"
+          />
+        </div>
+        <nav class="topnav">
+          <button class="nav-item active">Songs</button>
+          <button class="nav-item">Albums</button>
+          <button class="nav-item">Playlists</button>
+          <button class="nav-item">Favorites</button>
+        </nav>
+        <div class="top-actions">
+          <div class="status" id="status">Ready</div>
+        </div>
+      </header>
+
+      <div class="app-shell">
+        <aside class="side-panel">
+          <div class="panel-section">
+            <p class="panel-title">Browse</p>
+            <button class="side-item active">All Songs</button>
+            <button class="side-item">Albums</button>
+            <button class="side-item">Playlists</button>
+            <button class="side-item">Favorites</button>
+          </div>
+          <div class="panel-section">
+            <p class="panel-title">Quick Stats</p>
+            <div class="stat-card">
+              <span>Total Library</span>
+              <strong data-folder-meta>55 songs · audio pending</strong>
+            </div>
+            <div class="stat-card">
+              <span>Audio Ready</span>
+              <strong data-audio-count>0 tracks</strong>
+            </div>
+          </div>
+          <div class="panel-section">
+            <p class="panel-title">Actions</p>
+            <button class="primary full" id="openUploadFlow">Upload New Song</button>
+            <button class="ghost full" data-refresh>Refresh Library</button>
+          </div>
+        </aside>
+
+        <main class="content">
+          <section class="content-head">
+            <div>
+              <p class="eyebrow">Library Overview</p>
+              <h2>All Songs</h2>
+              <p class="sub">
+                Every song in your catalog, ready for lyrics sync and publishing.
+              </p>
+            </div>
+            <div class="content-actions">
+              <button class="primary" id="jumpToUpload">Upload</button>
+              <div class="kebab">
+                <button class="icon-btn" id="globalMenuToggle" aria-label="Open menu">&#8942;</button>
+                <div class="kebab-menu" id="globalMenu">
+                  <button class="menu-item">Create Playlist</button>
+                  <button class="menu-item">Create Album</button>
+                  <button class="menu-item">Add to Favorites</button>
+                  <button class="menu-item">Manage Categories</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="songs-section" id="musicFolder">
+            <div class="section-head">
+              <div>
+                <h3>All Songs</h3>
+                <p class="sub" data-folder-meta>55 songs · audio pending</p>
+              </div>
+              <div class="section-chip">Browse</div>
+            </div>
+            <div class="song-grid" id="folderList"></div>
+          </section>
+
+          <section class="songs-section" id="uploadedSongs">
+            <div class="section-head">
+              <div>
+                <h3>Recently Uploaded</h3>
+                <p class="sub">Songs already synced to Firebase.</p>
+              </div>
+              <button class="ghost" id="refreshSongs" data-refresh>Refresh</button>
+            </div>
+            <div class="song-grid" id="uploadedList"></div>
+          </section>
+
+          <section class="songs-section" id="savedAudio">
+            <div class="section-head">
+              <div>
+                <h3>Audio Ready</h3>
+                <p class="sub">Tracks with audio uploaded to Cloudinary.</p>
+              </div>
+              <div class="section-chip" data-audio-count>0 tracks</div>
+            </div>
+            <div class="song-grid" id="savedAudioList"></div>
+          </section>
+
+          <section class="upload-flow" id="uploadFlow">
+            <div class="upload-head">
+              <div>
+                <p class="eyebrow">Upload Flow</p>
+                <h2>Multi-step Upload</h2>
+                <p class="sub">Follow the steps to upload metadata, files, and synced lyrics.</p>
+              </div>
+              <div class="upload-actions">
+                <button class="ghost" id="stepPrev">Back</button>
+                <button class="primary" id="stepNext">Next</button>
+              </div>
+            </div>
+
+            <div class="stepper" data-stepper>
+              <button class="step active" data-step-target="1">1. Metadata</button>
+              <button class="step" data-step-target="2">2. Uploads</button>
+              <button class="step" data-step-target="3">3. Lyrics</button>
+              <button class="step" data-step-target="4">4. Preview</button>
+            </div>
+
+            <div class="step-panels">
+              <div class="step-panel active" data-step="1">
+                <div class="panel-grid">
+                  <label>
+                    Song Title
+                    <input type="text" id="title" placeholder="Song title" />
+                  </label>
+                  <label>
+                    Artist Name
+                    <input type="text" id="artist" placeholder="Artist name" />
+                  </label>
+                  <label>
+                    Album (optional)
+                    <input type="text" id="album" placeholder="Album / Collection" />
+                  </label>
+                  <label>
+                    Category / Playlist
+                    <input type="text" id="genre" placeholder="Category or playlist" />
+                  </label>
+                  <label>
+                    Language
+                    <input type="text" id="language" placeholder="e.g. Swahili" />
+                  </label>
+                  <label>
+                    Release Year
+                    <input type="number" id="year" placeholder="2024" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="step-panel" data-step="2">
+                <div class="panel-grid">
+                  <label>
+                    Audio File (required)
+                    <input type="file" id="audioFile" accept="audio/*" />
+                  </label>
+                  <label>
+                    Cover Image (optional)
+                    <input type="file" id="coverFile" accept="image/*" />
+                  </label>
+                  <label>
+                    Lyrics PDF (optional)
+                    <input type="file" id="pdfFile" accept="application/pdf" />
+                  </label>
+                </div>
+                <div class="actions">
+                  <button id="parsePdf">Extract Lyrics from PDF</button>
+                  <button id="loadText" class="ghost">Skip to Manual Entry</button>
+                </div>
+                <audio id="audioPreview" controls></audio>
+              </div>
+
+              <div class="step-panel" data-step="3">
+                <div class="card-header">
+                  <div>
+                    <h3>Lyrics Handling</h3>
+                    <p class="sub">Edit lines and timestamps. Click a row to set time.</p>
+                  </div>
+                  <div class="actions">
+                    <button id="addLine" class="ghost">Add Line</button>
+                    <button id="setTime">Set Time -> Selected Line</button>
+                    <button id="autoTimestamp" class="ghost">Auto Timestamp</button>
+                  </div>
+                </div>
+                <div class="lyrics-controls">
+                  <textarea
+                    id="lyricsText"
+                    placeholder="Paste lyrics here (one line per lyric)"
+                  ></textarea>
+                </div>
+                <div class="table">
+                  <div class="row header">
+                    <div>Time (sec)</div>
+                    <div>Lyric Line</div>
+                    <div></div>
+                  </div>
+                  <div id="lyricsTable"></div>
+                </div>
+              </div>
+
+              <div class="step-panel" data-step="4">
+                <div class="preview-grid">
+                  <div>
+                    <h3>Preview + Upload</h3>
+                    <p class="sub">
+                      Confirm metadata and push to Cloudinary + Firebase.
+                    </p>
+                  </div>
+                  <div class="preview-card">
+                    <div class="preview-meta">
+                      <span>Song</span>
+                      <strong id="previewSongTitle">Ready to upload</strong>
+                    </div>
+                    <div class="preview-meta">
+                      <span>Artist</span>
+                      <strong id="previewSongArtist">Add metadata first</strong>
+                    </div>
+                    <div class="preview-meta">
+                      <span>Lyrics</span>
+                      <strong id="previewLyricsCount">0 lines</strong>
+                    </div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button id="uploadCloudinary" class="primary">Upload Now</button>
+                  <button id="saveSong" class="ghost">Save to Library</button>
+                  <button id="saveMetadata" class="ghost">Save Metadata Only</button>
+                </div>
+                <div class="hint">
+                  Upload Now sends audio to Cloudinary, then saves metadata + lyrics to Firebase.
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div class="preview-modal hidden" id="previewModal">
+      <div class="preview-backdrop" data-preview-close="true"></div>
+      <div class="preview-panel">
+        <div class="preview-header">
+          <div>
+            <p class="eyebrow">Song Preview</p>
+            <h3 id="previewTitle">Preview</h3>
+            <p class="sub" id="previewMeta">Lyrics and audio sync</p>
+          </div>
+          <div class="preview-actions">
+            <button id="previewEdit" class="ghost">Edit Lyrics</button>
+            <button id="previewSave" class="primary">Save</button>
+            <button id="previewClose" class="ghost">Close</button>
+          </div>
+        </div>
+        <div class="preview-lyrics" id="previewLyrics"></div>
+        <div class="preview-player">
+          <div class="preview-progress">
+            <span id="previewCurrent">0:00</span>
+            <input type="range" id="previewSeek" min="0" max="100" value="0" />
+            <span id="previewDuration">0:00</span>
+          </div>
+          <div class="preview-controls">
+            <button class="icon-btn" id="previewRepeat" title="Repeat">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 7h10a4 4 0 0 1 0 8h-1v-2h1a2 2 0 0 0 0-4H7v3L3 8l4-4v3z" />
+                <path d="M17 17H7a4 4 0 0 1 0-8h1v2H7a2 2 0 0 0 0 4h10v-3l4 4-4 4v-3z" />
+              </svg>
+            </button>
+            <button class="icon-btn" id="previewPrev" title="Previous">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6h2v12H6z" />
+                <path d="M18 6v12l-8-6 8-6z" />
+              </svg>
+            </button>
+            <button class="icon-btn primary" id="previewPlay" title="Play/Pause"></button>
+            <button class="icon-btn" id="previewNext" title="Next">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M16 6h2v12h-2z" />
+                <path d="M6 6v12l8-6-8-6z" />
+              </svg>
+            </button>
+            <div class="more">
+              <button class="icon-btn" id="previewMore" title="More">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="5" cy="12" r="1.5" />
+                  <circle cx="12" cy="12" r="1.5" />
+                  <circle cx="19" cy="12" r="1.5" />
+                </svg>
+              </button>
+              <div class="more-menu" id="previewMenu">
+                <div class="menu-item">
+                  <span>Volume</span>
+                  <input
+                    type="range"
+                    id="previewVolume"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value="1"
+                  />
+                </div>
+                <div class="menu-item">
+                  <span>Speed</span>
+                  <select id="previewSpeed">
+                    <option value="0.75">0.75x</option>
+                    <option value="1" selected>1x</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <audio id="previewAudio"></audio>
+      </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
+
+
+
